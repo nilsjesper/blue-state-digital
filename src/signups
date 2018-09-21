@@ -1,0 +1,51 @@
+// @flow
+import querystring from 'querystring'
+import Promise from 'bluebird'
+import { generateApiMac, getRequestPromise } from './utils'
+
+/**
+ * This method gets all properties of the specified signup form.
+ * https://secure.bluestatedigital.com/page/api/doc#---------------------get_form-----------------
+ *
+ * @example
+ * const form = await blueStateDigital.getFormByID({ signup_form_id: '105' })
+ *
+ * @param {object} params Params Object
+ * @param {string} params.signup_form_id BSD Form ID
+ * @returns {Promise} BSD XML Response Promise
+ * @memberof BSD
+ */
+
+export function getSignupsByFormId(params: { signup_form_id: string }) {
+  return new Promise((resolve, reject) => {
+    const timeStamp = Date.now()
+    const queryParams = querystring.stringify(params)
+    const apiMac = generateApiMac({
+      path: '/page/api/signup/get_signups_by_form_id',
+      params: queryParams.length === 0 ? '' : `${queryParams}`,
+      apiID: this.apiID,
+      apiVer: this.apiVer,
+      apiSecret: this.apiSecret,
+      apiTs: timeStamp,
+    })
+
+    getRequestPromise({
+      url: `${this.baseUrl}/page/api/signup/get_signups_by_form_id?api_ver=${this.apiVer}&api_id=${
+        this.apiID
+      }&api_ts=${timeStamp}&api_mac=${apiMac}`,
+      method: 'GET',
+      query: params,
+      json: true,
+      headers: {
+        'User-agent': `node.js/${process.version.replace('v', '')}`,
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((response) => {
+        resolve(response)
+      })
+      .catch((error) => {
+        reject(error)
+      })
+  })
+}
